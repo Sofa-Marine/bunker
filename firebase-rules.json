@@ -1,0 +1,35 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read":  "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "packs": {
+      ".read": "auth != null",
+      "$packId": {
+        ".write": "auth != null && (!data.exists() || data.child('authorUid').val() === auth.uid)"
+      }
+    },
+    "rooms": {
+      ".read": "auth != null",
+      "$roomId": {
+        ".write": "auth != null",
+        "players": {
+          "$uid": {
+            ".write": "auth != null"
+          }
+        },
+        "chat": {
+          ".write": "auth != null"
+        },
+        "votes": {
+          "$uid": {
+            ".write": "$uid === auth.uid"
+          }
+        }
+      }
+    }
+  }
+}
