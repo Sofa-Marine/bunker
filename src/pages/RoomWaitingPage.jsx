@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useToast } from '../hooks/useToast';
 import {
   signInAnon, auth,
-  joinRoom, leaveRoom, deleteRoom,
-  listenPlayers, listenChat, sendChatMessage,
+  joinRoom, leaveRoom,
+  listenPlayers, listenChat, listenRoom, sendChatMessage,
   updateRoom, advancePhase,
 } from '../firebase';
 
@@ -54,10 +54,20 @@ export default function RoomWaitingPage({ navigate, gameState, setGameState }) {
 
     init().catch(console.error);
 
+    // Non-host: listen for host starting the game
+    let unsubRoom;
+    if (!isHost && roomId) {
+      unsubRoom = listenRoom(roomId, room => {
+        if (!room) return;
+        if (room.phase === 'briefing') navigate('briefing', { ...gameState });
+        if (room.phase === 'game')     navigate('game', { ...gameState, round: room.round || 1 });
+      });
+    }
+
     return () => {
       unsubPlayers?.();
       unsubChat?.();
-      // leave room on unmount if not host starting game
+      unsubRoom?.();
     };
   }, [roomId]);
 

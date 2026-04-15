@@ -689,3 +689,215 @@ input[type=range]::-webkit-slider-thumb {
 
 /* ── Extra animations ── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* ═══════════════════════════════════════════════════════════
+   GAME PAGE LAYOUT
+   ═══════════════════════════════════════════════════════════ */
+.game-root {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: calc(100vh - 56px);
+  background: var(--bg);
+  position: relative;
+}
+.game-mobile-bar {
+  display: none;
+}
+.game-sidebar {
+  grid-row: 1 / -1;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.game-center {
+  padding: 1.25rem;
+  overflow-y: auto;
+}
+.game-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+.game-chat-fab {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.game-chat-panel {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 2rem;
+  width: 320px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 99;
+  display: flex;
+  flex-direction: column;
+  max-height: 440px;
+  animation: fadeIn 0.2s ease;
+}
+.game-mobile-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  padding: 6px 14px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   АДАПТИВНОСТЬ — ПЛАНШЕТ
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .profile-layout { grid-template-columns: 1fr; }
+  .profile-sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+
+  /* Лобби */
+  .page-wrapper > div[style*="grid-template-columns: 300px"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Редактор */
+  .page-wrapper > div[style*="grid-template-columns: 220px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Игровая страница — убираем боковую колонку */
+  .game-root {
+    grid-template-columns: 1fr;
+  }
+  .game-sidebar {
+    display: none;
+  }
+  .game-mobile-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    grid-column: 1;
+  }
+  .game-center {
+    grid-column: 1;
+  }
+  .game-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .game-chat-panel {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    bottom: 5rem;
+  }
+  .game-chat-fab {
+    bottom: 1rem;
+    right: 1rem;
+    width: 46px;
+    height: 46px;
+  }
+
+  /* RoomWaiting */
+  div[style*="grid-template-columns: 1fr 360px"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   АДАПТИВНОСТЬ — ТЕЛЕФОН
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  /* Navbar */
+  nav > div:nth-child(2) {
+    display: none;
+  }
+  nav {
+    padding: 0 1rem !important;
+  }
+
+  /* Hero */
+  .page-wrapper h1 {
+    font-size: clamp(2.5rem, 15vw, 4rem) !important;
+  }
+
+  /* Карточки в игре — 1 колонка */
+  .game-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* Лобби тулбар */
+  div[style*="display: flex"][style*="gap: 0.75rem"][style*="align-items: center"] {
+    flex-wrap: wrap;
+  }
+
+  /* Профиль */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Комната ожидания — сетка игроков */
+  div[style*="minmax(200px, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Модалки */
+  .modal-content {
+    margin: 1rem !important;
+    padding: 1.25rem !important;
+  }
+
+  /* Голосование */
+  div[style*="maxWidth: 760px"] {
+    padding: 0 0.5rem;
+  }
+
+  /* Брифинг */
+  div[style*="gridTemplateColumns: 'repeat(3, 1fr)'"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Общие отступы страниц */
+  .page-wrapper {
+    padding-bottom: 80px; /* место для FAB кнопок */
+  }
+
+  /* Бункер мини-инфо */
+  div[style*="gap: 1.5rem"][style*="flexWrap: wrap"] {
+    gap: 0.75rem !important;
+  }
+
+  /* Статус-бар */
+  div[style*="justifyContent: 'space-between'"][style*="flexWrap: wrap"] {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ДОПОЛНИТЕЛЬНЫЕ УТИЛИТЫ
+   ═══════════════════════════════════════════════════════════ */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* Скролл-бар тонкий */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+*::-webkit-scrollbar { width: 4px; height: 4px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }

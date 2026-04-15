@@ -3,6 +3,7 @@ import { useToast } from '../hooks/useToast';
 import { useAuth } from '../hooks/useAuth';
 import { createPack, updatePack, getPack } from '../firebase';
 import { CATEGORIES } from '../data';
+import { SPECIAL_ACTIONS, ACTION_TYPE_COLOR, ACTION_TYPE_LABEL } from '../data/specialActions';
 
 const DEFAULT_CARDS = {
   professions: ['Хирург','Инженер-ядерщик','Агроном','Военный снайпер','Психолог','Повар','Электрик'],
@@ -106,6 +107,7 @@ export default function EditorPage({ navigate, gameState }) {
 
   const TABS = [
     { id: 'cards',    label: 'Карточки' },
+    { id: 'actions',  label: 'Спец-действия' },
     { id: 'scenario', label: 'Сценарий' },
     { id: 'settings', label: 'Настройки пака' },
   ];
@@ -194,6 +196,37 @@ export default function EditorPage({ navigate, gameState }) {
           )}
 
           {/* SCENARIO tab */}
+          {activeTab === 'actions' && (
+            <div style={{ animation: 'fadeIn 0.3s ease' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', letterSpacing: 3, color: 'var(--text3)', marginBottom: '0.5rem' }}>
+                // СПЕЦ-ДЕЙСТВИЯ — {SPECIAL_ACTIONS.length} карточек
+              </div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text3)', marginBottom: '1.25rem', padding: '0.75rem', background: 'rgba(200,168,75,0.04)', border: '1px solid rgba(200,168,75,0.15)' }}>
+                Спец-действия раздаются игрокам автоматически при старте игры. При создании пака ты видишь весь список — в игре каждый получает одну случайную карту. Действия согласовываются вслух с пати.
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                {SPECIAL_ACTIONS.map(a => (
+                  <div key={a.id} style={{ background: 'var(--bg2)', border: '1px solid var(--border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                    <div style={{ flexShrink: 0, marginTop: 2 }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '0.5rem', letterSpacing: 1, padding: '2px 8px', border: `1px solid ${ACTION_TYPE_COLOR[a.type]}`, color: ACTION_TYPE_COLOR[a.type] }}>
+                        {ACTION_TYPE_LABEL[a.type]}
+                      </span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontFamily: 'var(--title)', fontSize: '0.85rem', fontWeight: 600, letterSpacing: 1, color: 'var(--text)', marginBottom: 3 }}>{a.name}</div>
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: '0.62rem', color: 'var(--text3)', lineHeight: 1.5 }}>{a.desc}</div>
+                    </div>
+                    {a.needsConsent && (
+                      <div style={{ flexShrink: 0, fontFamily: 'var(--mono)', fontSize: '0.5rem', color: 'var(--accent)', border: '1px solid rgba(200,168,75,0.3)', padding: '2px 8px', whiteSpace: 'nowrap' }}>
+                        согласие пати
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {activeTab === 'scenario' && (
             <div style={{ animation: 'fadeIn 0.3s ease', maxWidth: 500 }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', letterSpacing: 3, color: 'var(--text3)', marginBottom: '1.5rem' }}>// НАСТРОЙКИ СЦЕНАРИЯ</div>
