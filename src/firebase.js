@@ -229,14 +229,19 @@ export async function deleteRoom(roomId) {
 
 export async function joinRoom(roomId, playerData) {
   const uid = auth.currentUser?.uid || await signInAnon();
+  // Восстанавливаем isHost если uid совпадает с hostUid комнаты
+  const roomSnap = await get(ref(db, `rooms/${roomId}`));
+  const roomVal = roomSnap.exists() ? roomSnap.val() : {};
+  const isActualHost = roomVal.hostUid === uid;
   await set(ref(db, `rooms/${roomId}/players/${uid}`), {
     ...playerData,
     uid,
-    joinedAt:  Date.now(),
-    ready:     false,
-    eliminated:false,
+    isHost: isActualHost,
+    joinedAt:   Date.now(),
+    ready:      false,
+    eliminated: false,
   });
-  return uid;
+  return { uid, isHost: isActualHost };
 }
 
 export async function leaveRoom(roomId, uid) {

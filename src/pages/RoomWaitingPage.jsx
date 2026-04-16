@@ -37,13 +37,18 @@ export default function RoomWaitingPage({ navigate, gameState, setGameState }) {
 
       if (!roomId) return; // shouldn't happen
 
-      // Join room as player
-      await joinRoom(roomId, {
+      // Join room as player — joinRoom теперь возвращает реальный isHost
+      const result = await joinRoom(roomId, {
         name: gameState?.playerName ?? 'ИГРОК_' + currentUid.slice(0,4).toUpperCase(),
         avatar: (gameState?.playerName ?? 'ИГ').slice(0,2).toUpperCase(),
         isHost,
         ready: false,
       });
+      // Обновляем isHost из Firebase (восстановление при перезаходе)
+      const resolvedIsHost = result?.isHost ?? isHost;
+      if (resolvedIsHost !== isHost) {
+        setGameState(prev => ({ ...prev, isHost: resolvedIsHost }));
+      }
 
       // Listen to players
       unsubPlayers = listenPlayers(roomId, setPlayers);
@@ -117,7 +122,8 @@ export default function RoomWaitingPage({ navigate, gameState, setGameState }) {
     navigate('briefing', { ...gameState });
   }
 
-  const canStart = players.length >= 2 && isHost;
+  const MIN_PLAYERS = 6;
+  const canStart = players.length >= MIN_PLAYERS && isHost;
   const inviteCode = roomId ? roomId.slice(0, 8).toUpperCase() : '...';
 
   return (
@@ -230,7 +236,7 @@ export default function RoomWaitingPage({ navigate, gameState, setGameState }) {
           {isHost ? (
             <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', padding: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '0.7rem', color: canStart ? 'var(--text2)' : 'var(--text3)' }}>
-                {players.length < 2 ? `Нужно минимум 2 игрока (${players.length}/2)` : `Готово — ${players.length} игроков`}
+                {players.length < MIN_PLAYERS ? `Нужно минимум ${MIN_PLAYERS} игроков (${players.length}/${MIN_PLAYERS})` : `Готово — ${players.length} игроков`}
               </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                 <button onClick={handleDeleteLobby}

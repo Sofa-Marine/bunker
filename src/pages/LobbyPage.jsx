@@ -7,10 +7,75 @@ import { createRoom, getRoomByCode, listenPublicRooms, signInAnon, auth,
 
 function PlayerDots({ players, max }) {
   return (
-    <div style={{ display: 'flex', gap: 4, marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
       {Array.from({ length: Math.min(max, 12) }).map((_, i) => (
-        <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: i < players ? 'var(--accent)' : 'var(--border2)' }} />
+        <div key={i} style={{
+          width: 7, height: 7, borderRadius: '50%',
+          background: i < players ? 'var(--accent)' : 'var(--border2)',
+        }} />
       ))}
+    </div>
+  );
+}
+
+function RoomCard({ room, onJoin }) {
+  const playerCount = Object.keys(room.players || {}).length;
+  const isFull = playerCount >= (room.maxPlayers || 8);
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      onClick={() => !isFull && onJoin(room)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered && !isFull ? 'var(--bg3)' : 'var(--bg2)',
+        border: `1px solid ${hovered && !isFull ? 'var(--accent)' : 'var(--border)'}`,
+        borderLeft: `3px solid ${hovered && !isFull ? 'var(--accent)' : 'var(--border2)'}`,
+        padding: '1rem 1.25rem',
+        cursor: isFull ? 'default' : 'pointer',
+        opacity: isFull ? 0.6 : 1,
+        transition: 'all 0.15s',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.75rem',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+        <div style={{
+          fontFamily: 'var(--title)', fontSize: '1rem', fontWeight: 600,
+          letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text)',
+          flex: 1, minWidth: 0,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+        }}>
+          {room.name}
+        </div>
+        <span style={{
+          fontFamily: 'var(--mono)', fontSize: '0.5rem', letterSpacing: 1,
+          padding: '3px 8px', flexShrink: 0,
+          border: `1px solid ${isFull ? 'rgba(192,57,43,0.4)' : 'rgba(200,168,75,0.3)'}`,
+          color: isFull ? '#e06060' : 'var(--accent)',
+          background: isFull ? 'rgba(192,57,43,0.08)' : 'rgba(200,168,75,0.06)',
+        }}>
+          {isFull ? 'ПОЛНАЯ' : 'ОТКРЫТА'}
+        </span>
+      </div>
+
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)' }}>
+        {room.cardPack || 'Стандартный пак'}
+      </div>
+
+      <PlayerDots players={playerCount} max={room.maxPlayers || 8} />
+
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)',
+      }}>
+        <span>Хост: {room.hostName || '—'}</span>
+        <span style={{ color: isFull ? '#e06060' : 'var(--accent)' }}>
+          {playerCount}/{room.maxPlayers || 8}
+        </span>
+      </div>
     </div>
   );
 }
@@ -44,7 +109,7 @@ export default function LobbyPage({ navigate }) {
   }, [user]);
 
   useEffect(() => {
-    if (createOpen) setPackInput('Стандартный пак');
+    if (createOpen) { setPackInput('Стандартный пак'); setRoomNameInput(''); setPasswordInput(''); setMaxPlayers(8); }
   }, [createOpen]);
 
   const filtered = rooms.filter(r =>
@@ -117,92 +182,176 @@ export default function LobbyPage({ navigate }) {
 
   return (
     <div className="page-wrapper">
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', minHeight: 'calc(100vh - 56px)' }}>
-        <div style={{ background: 'var(--bg2)', borderRight: '1px solid var(--border)', padding: '1.5rem', overflowY: 'auto' }}>
-          <div className="sidebar-title">// АКТИВНЫЕ КОМНАТЫ</div>
-          {rooms.length === 0 && <div style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text3)', padding: '1rem 0' }}>Нет публичных комнат</div>}
-          {rooms.slice(0, 10).map(r => (
-            <div key={r.id} onClick={() => handleJoin(r)}
-              style={{ padding: '1rem', borderBottom: '1px solid var(--border)', cursor: 'pointer', transition: 'background 0.15s', borderLeft: '3px solid var(--accent)' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg3)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              <div style={{ fontFamily: 'var(--title)', fontSize: '0.9rem', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text)', marginBottom: 4 }}>{r.name}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)', display: 'flex', gap: '1rem' }}>
-                <span>👥 {Object.keys(r.players || {}).length}/{r.maxPlayers || 8}</span>
-                <span>{r.cardPack || 'Стандартный'}</span>
-              </div>
+
+      {/* ── HEADER ────────────────────────────────────── */}
+      <div style={{
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg2)',
+        padding: '1.25rem 1.5rem',
+      }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          {/* Title row */}
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', letterSpacing: 3, color: 'var(--text3)', marginBottom: 4 }}>
+              // ЛОББИ
+            </div>
+            <h2 style={{
+              fontFamily: 'var(--title)', fontSize: 'clamp(1.4rem, 4vw, 2rem)',
+              fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              color: 'var(--text)', lineHeight: 1,
+            }}>
+              ВЫБРАТЬ КОМНАТУ
+            </h2>
+          </div>
+
+          {/* Toolbar */}
+          <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', alignItems: 'stretch' }}>
+            <input
+              className="search-input"
+              placeholder="Поиск комнат..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ flex: '1 1 160px', minWidth: 0 }}
+            />
+            <button
+              className="btn-sm primary"
+              onClick={() => setJoinOpen(true)}
+              style={{ flexShrink: 0, padding: '0 1rem', height: 42, letterSpacing: 2 }}
+            >
+              ◈ ПО КОДУ
+            </button>
+            <button
+              onClick={() => setCreateOpen(true)}
+              style={{
+                flexShrink: 0, height: 42, padding: '0 1.25rem',
+                fontFamily: 'var(--mono)', fontSize: '0.7rem', letterSpacing: 2,
+                background: 'var(--accent)', border: '1px solid var(--accent)',
+                color: 'var(--bg)', cursor: 'pointer', fontWeight: 'bold',
+              }}
+            >
+              + СОЗДАТЬ
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── MAIN ──────────────────────────────────────── */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '1.5rem' }}>
+
+        {/* Auth banner */}
+        {!user && (
+          <div style={{
+            background: 'rgba(200,168,75,0.05)', border: '1px solid rgba(200,168,75,0.2)',
+            padding: '0.875rem 1.25rem', marginBottom: '1.25rem',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: '0.75rem',
+          }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text2)' }}>
+              Войдите — статистика и паки сохранятся в профиле
+            </div>
+            <button
+              onClick={() => navigate('auth')}
+              style={{
+                fontFamily: 'var(--mono)', fontSize: '0.65rem', letterSpacing: 2,
+                padding: '6px 16px', background: 'var(--accent)',
+                border: '1px solid var(--accent)', color: 'var(--bg)',
+                cursor: 'pointer', fontWeight: 'bold',
+              }}
+            >
+              ВОЙТИ
+            </button>
+          </div>
+        )}
+
+        {/* Stats row */}
+        <div style={{
+          display: 'flex', gap: '1rem', flexWrap: 'wrap',
+          marginBottom: '1.25rem',
+        }}>
+          {[
+            ['КОМНАТ', rooms.length],
+            ['ОНЛАЙН', rooms.reduce((s, r) => s + Object.keys(r.players || {}).length, 0)],
+            ['ОТКРЫТЫХ', rooms.filter(r => r.status !== 'full').length],
+          ].map(([label, val]) => (
+            <div key={label} style={{
+              background: 'var(--bg2)', border: '1px solid var(--border)',
+              padding: '0.625rem 1rem', display: 'flex', gap: '0.75rem', alignItems: 'center',
+            }}>
+              <span style={{ fontFamily: 'var(--title)', fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent)' }}>{val}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '0.55rem', letterSpacing: 2, color: 'var(--text3)', textTransform: 'uppercase' }}>{label}</span>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>
-          <div className="lobby-toolbar" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <input className="search-input" placeholder="Поиск комнат..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-            <button className="btn-main secondary" onClick={() => setJoinOpen(true)} style={{ flexShrink: 0 }}>◈ По коду</button>
-            <button className="btn-main" onClick={() => setCreateOpen(true)} style={{ flexShrink: 0 }}>+ Создать</button>
+        {/* Rooms grid or empty */}
+        {filtered.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '4rem 2rem',
+            border: '1px dashed var(--border)',
+          }}>
+            <div style={{ fontSize: '2.5rem', marginBottom: 12, opacity: 0.4 }}>☢</div>
+            <div style={{
+              fontFamily: 'var(--mono)', fontSize: '0.7rem',
+              color: 'var(--text3)', marginBottom: '1.5rem', letterSpacing: 2,
+            }}>
+              {search ? '// КОМНАТЫ НЕ НАЙДЕНЫ' : '// НЕТ ПУБЛИЧНЫХ КОМНАТ'}
+            </div>
+            {!search && (
+              <button className="btn-main" onClick={() => setCreateOpen(true)}>
+                + Создать первую комнату
+              </button>
+            )}
           </div>
-
-          {!user && (
-            <div style={{ background: 'rgba(200,168,75,0.06)', border: '1px solid rgba(200,168,75,0.2)', padding: '0.875rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', color: 'var(--text2)' }}>Войдите чтобы статистика и паки сохранялись в профиле</div>
-              <button onClick={() => navigate('auth')} style={{ fontFamily: 'var(--mono)', fontSize: '0.65rem', letterSpacing: 2, padding: '6px 16px', background: 'var(--accent)', border: '1px solid var(--accent)', color: 'var(--bg)', cursor: 'pointer', fontWeight: 'bold' }}>ВОЙТИ</button>
-            </div>
-          )}
-
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '4rem 2rem', border: '1px dashed var(--border)' }}>
-              <div style={{ fontSize: '2rem', marginBottom: 12 }}>☢</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '0.7rem', color: 'var(--text3)', marginBottom: '1.5rem' }}>
-                {search ? '// Комнаты не найдены' : '// Нет публичных комнат. Создайте первую!'}
-              </div>
-              <button className="btn-main" onClick={() => setCreateOpen(true)}>+ Создать комнату</button>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1px', background: 'var(--border)' }}>
-              {filtered.map(r => {
-                const playerCount = Object.keys(r.players || {}).length;
-                const isFull = playerCount >= (r.maxPlayers || 8);
-                return (
-                  <div key={r.id} onClick={() => !isFull && handleJoin(r)}
-                    style={{ background: 'var(--bg2)', padding: '1.5rem', cursor: isFull ? 'default' : 'pointer', transition: 'all 0.15s', borderLeft: '3px solid transparent', opacity: isFull ? 0.6 : 1 }}
-                    onMouseEnter={e => { if (!isFull) { e.currentTarget.style.background = 'var(--bg3)'; e.currentTarget.style.borderLeftColor = 'var(--accent)'; }}}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg2)'; e.currentTarget.style.borderLeftColor = 'transparent'; }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                      <div style={{ fontFamily: 'var(--title)', fontSize: '1rem', fontWeight: 600, letterSpacing: 1, textTransform: 'uppercase', color: 'var(--text)' }}>{r.name}</div>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: '0.55rem', letterSpacing: 1, padding: '3px 8px', border: '1px solid var(--border2)', color: isFull ? '#e06060' : 'var(--accent)' }}>
-                        {isFull ? 'ПОЛНАЯ' : 'ОТКРЫТА'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--text3)', marginBottom: '1rem', fontFamily: 'var(--mono)' }}>{r.cardPack || 'Стандартный пак'}</div>
-                    <PlayerDots players={playerCount} max={r.maxPlayers || 8} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)' }}>
-                      <span>Хост: {r.hostName || '—'}</span>
-                      <span>{playerCount}/{r.maxPlayers || 8}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '1px',
+            background: 'var(--border)',
+          }}>
+            {filtered.map(r => (
+              <RoomCard key={r.id} room={r} onJoin={handleJoin} />
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* ── MODAL: СОЗДАТЬ КОМНАТУ ─────────────────────── */}
       <Modal open={createOpen} onClose={() => setCreateOpen(false)} title="Создать Комнату">
         <div className="form-group">
           <label className="form-label">Название комнаты</label>
-          <input className="form-input" placeholder="Бункер апокалипсиса..." value={roomNameInput} onChange={e => setRoomNameInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreate()} />
+          <input
+            className="form-input"
+            placeholder="Бункер апокалипсиса..."
+            value={roomNameInput}
+            onChange={e => setRoomNameInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleCreate()}
+            autoFocus
+          />
         </div>
+
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">Макс. игроков: {maxPlayers}</label>
             <div className="range-group">
-              <input type="range" min="4" max="12" value={maxPlayers} onChange={e => setMaxPlayers(e.target.value)} />
+              <input
+                type="range" min="6" max="12"
+                value={maxPlayers}
+                onChange={e => setMaxPlayers(e.target.value)}
+              />
               <span className="range-val">{maxPlayers}</span>
+            </div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '0.55rem', color: 'var(--text3)', marginTop: 4 }}>
+              Минимум для старта: 6 игроков
             </div>
           </div>
           <div className="form-group">
             <label className="form-label">Пак карточек</label>
-            <select className="form-input" value={packInput} onChange={e => setPackInput(e.target.value)}>
+            <select
+              className="form-input"
+              value={packInput}
+              onChange={e => setPackInput(e.target.value)}
+            >
               {packOptions.map(p => (
                 <option key={p.id} value={p.name}>{p.name}</option>
               ))}
@@ -210,8 +359,12 @@ export default function LobbyPage({ navigate }) {
             {user && userPacks.length === 0 && (
               <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)', marginTop: 6 }}>
                 Нет своих паков —{' '}
-                <span style={{ color: 'var(--accent)', cursor: 'pointer' }}
-                  onClick={() => { setCreateOpen(false); navigate('editor'); }}>создать пак</span>
+                <span
+                  style={{ color: 'var(--accent)', cursor: 'pointer' }}
+                  onClick={() => { setCreateOpen(false); navigate('editor'); }}
+                >
+                  создать пак
+                </span>
               </div>
             )}
             {!user && (
@@ -221,28 +374,66 @@ export default function LobbyPage({ navigate }) {
             )}
           </div>
         </div>
+
         <div className="form-group">
           <label className="form-label">Пароль (опционально)</label>
-          <input className="form-input" type="password" placeholder="Оставьте пустым для открытой комнаты" value={passwordInput} onChange={e => setPasswordInput(e.target.value)} />
+          <input
+            className="form-input"
+            type="password"
+            placeholder="Оставьте пустым для открытой комнаты"
+            value={passwordInput}
+            onChange={e => setPasswordInput(e.target.value)}
+          />
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-          <button className="btn-main" style={{ flex: 1 }} onClick={handleCreate} disabled={creating}>
-            {creating ? 'Создание...' : 'Создать комнату'}
+
+        <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+          <button
+            className="btn-main"
+            style={{ flex: 1, minWidth: 120 }}
+            onClick={handleCreate}
+            disabled={creating}
+          >
+            {creating ? 'Создание...' : '+ Создать комнату'}
           </button>
-          <button className="btn-main secondary" onClick={() => setCreateOpen(false)}>Отмена</button>
+          <button className="btn-main secondary" onClick={() => setCreateOpen(false)}>
+            Отмена
+          </button>
         </div>
       </Modal>
 
+      {/* ── MODAL: ВОЙТИ ПО КОДУ ──────────────────────── */}
       <Modal open={joinOpen} onClose={() => setJoinOpen(false)} title="Войти по коду">
+        <div style={{
+          fontFamily: 'var(--mono)', fontSize: '0.6rem', color: 'var(--text3)',
+          marginBottom: '1.25rem', letterSpacing: 1,
+        }}>
+          Введите код, который прислал хост комнаты
+        </div>
         <div className="form-group">
           <label className="form-label">Код комнаты</label>
-          <input className="form-input" placeholder="XXXXXX" value={joinCode} onChange={e => setJoinCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === 'Enter' && handleJoinByCode()} maxLength={8} style={{ letterSpacing: 4, textAlign: 'center', fontSize: '1.1rem' }} />
+          <input
+            className="form-input"
+            placeholder="XXXXXX"
+            value={joinCode}
+            onChange={e => setJoinCode(e.target.value.toUpperCase())}
+            onKeyDown={e => e.key === 'Enter' && handleJoinByCode()}
+            maxLength={8}
+            autoFocus
+            style={{ letterSpacing: 6, textAlign: 'center', fontSize: '1.2rem', fontWeight: 700 }}
+          />
         </div>
         <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem' }}>
-          <button className="btn-main" style={{ flex: 1 }} onClick={handleJoinByCode} disabled={joinLoading}>
+          <button
+            className="btn-main"
+            style={{ flex: 1 }}
+            onClick={handleJoinByCode}
+            disabled={joinLoading}
+          >
             {joinLoading ? 'Поиск...' : '▶ ВОЙТИ'}
           </button>
-          <button className="btn-main secondary" onClick={() => setJoinOpen(false)}>Отмена</button>
+          <button className="btn-main secondary" onClick={() => setJoinOpen(false)}>
+            Отмена
+          </button>
         </div>
       </Modal>
     </div>
