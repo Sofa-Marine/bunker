@@ -136,7 +136,7 @@ export default function LobbyPage({ navigate }) {
         </div>
 
         <div style={{ padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="lobby-toolbar" style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <input className="search-input" placeholder="Поиск комнат..." value={search} onChange={e => setSearch(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
             <button className="btn-main secondary" onClick={() => setJoinOpen(true)} style={{ flexShrink: 0 }}>◈ По коду</button>
             <button className="btn-main" onClick={() => setCreateOpen(true)} style={{ flexShrink: 0 }}>+ Создать</button>

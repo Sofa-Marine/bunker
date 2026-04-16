@@ -400,7 +400,7 @@ export default function GamePage({ navigate, gameState }) {
       <div className="game-center">
 
         {/* Статус-бар */}
-        <div style={{ background: 'var(--bg2)', border: `1px solid ${allReady ? 'var(--accent)' : 'var(--border)'}`, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', transition: 'border-color 0.5s', marginBottom: '1.25rem' }}>
+        <div className="game-status-bar" style={{ background: 'var(--bg2)', border: `1px solid ${allReady ? 'var(--accent)' : 'var(--border)'}`, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', transition: 'border-color 0.5s', marginBottom: '1.25rem' }}>
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: '0.6rem', letterSpacing: 3, color: allReady ? 'var(--accent)' : 'var(--text3)', marginBottom: 3 }}>
               {allReady ? '// ВСЕ ГОТОВЫ' : `// РАУНД ${round} — РАСКРОЙ КАРТУ`}
@@ -447,7 +447,7 @@ export default function GamePage({ navigate, gameState }) {
         </div>
 
         {/* Бункер инфо */}
-        <div style={{ background: 'var(--bg2)', border: '1px solid var(--border)', padding: '1rem 1.25rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+        <div className="game-info-bar" style={{ background: 'var(--bg2)', border: '1px solid var(--border)', padding: '1rem 1.25rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
           {[['☢', 'А-7'], ['Сценарий', gameState?.scenario || 'Ядерная война'], ['Угроза', '87%'], ['Игроков', activePlayers.length]].map(([k, v]) => (
             <div key={k}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '0.5rem', letterSpacing: 2, color: 'var(--text3)' }}>{k}</div>

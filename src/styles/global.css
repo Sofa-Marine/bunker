@@ -819,72 +819,155 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   NAVBAR — BURGER / DRAWER
+   ═══════════════════════════════════════════════════════════ */
+
+/* Desktop: ссылки и авторизация видны, бургер скрыт */
+.navbar-links { display: flex; gap: 2px; }
+.navbar-auth  { display: flex; align-items: center; }
+.navbar-burger { display: none !important; }
+
+@media (max-width: 640px) {
+  /* Скрываем десктопную навигацию */
+  .navbar-links { display: none !important; }
+  .navbar-auth  { display: none !important; }
+
+  /* Показываем бургер */
+  .navbar-burger { display: flex !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════
    АДАПТИВНОСТЬ — ТЕЛЕФОН
    ═══════════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
-  /* Navbar */
-  nav > div:nth-child(2) {
-    display: none;
+
+  /* ── Общее ── */
+  .page-wrapper {
+    padding-bottom: 1rem;
   }
-  nav {
-    padding: 0 1rem !important;
+  .section {
+    padding: 2.5rem 1rem;
   }
 
-  /* Hero */
+  /* Hero заголовок */
   .page-wrapper h1 {
-    font-size: clamp(2.5rem, 15vw, 4rem) !important;
+    font-size: clamp(2.4rem, 14vw, 4rem) !important;
   }
 
-  /* Карточки в игре — 1 колонка */
-  .game-cards-grid {
-    grid-template-columns: 1fr 1fr;
+  /* ── Формы ── */
+  .form-row {
+    grid-template-columns: 1fr !important;
   }
 
-  /* Лобби тулбар */
-  div[style*="display: flex"][style*="gap: 0.75rem"][style*="align-items: center"] {
-    flex-wrap: wrap;
+  /* ── Модалки — прижимаем к краям ── */
+  .modal {
+    width: calc(100vw - 2rem) !important;
+    padding: 1.25rem !important;
+    margin: 0 1rem !important;
   }
-
-  /* Профиль */
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-  }
-
-  /* Комната ожидания — сетка игроков */
-  div[style*="minmax(200px, 1fr)"] {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
-  /* Модалки */
   .modal-content {
     margin: 1rem !important;
     padding: 1.25rem !important;
   }
 
-  /* Голосование */
+  /* ── Профиль ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* ── Карточки игры — 2 колонки ── */
+  .game-cards-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .game-center {
+    padding: 0.75rem;
+  }
+  .game-mobile-bar {
+    padding: 0.6rem 0.875rem;
+    gap: 0.5rem;
+  }
+  .game-chat-panel {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    bottom: 5rem;
+  }
+  .game-chat-fab {
+    bottom: 0.875rem;
+    right: 0.875rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+
+  /* ── Лобби ── */
+  .lobby-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+  .search-input {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  /* ── Комната ожидания — сетка игроков ── */
+  div[style*="minmax(200px, 1fr)"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ── Голосование ── */
   div[style*="maxWidth: 760px"] {
     padding: 0 0.5rem;
   }
 
-  /* Брифинг */
-  div[style*="gridTemplateColumns: 'repeat(3, 1fr)'"] {
+  /* ── Брифинг — 3 колонки → 1 ── */
+  div[style*="repeat(3, 1fr)"] {
     grid-template-columns: 1fr !important;
   }
 
-  /* Общие отступы страниц */
-  .page-wrapper {
-    padding-bottom: 80px; /* место для FAB кнопок */
+  /* ── Бункер инфо-плашка ── */
+  .game-info-bar {
+    gap: 0.875rem !important;
+    flex-wrap: wrap;
   }
 
-  /* Бункер мини-инфо */
-  div[style*="gap: 1.5rem"][style*="flexWrap: wrap"] {
+  /* ── Статус-бар ── */
+  .game-status-bar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
     gap: 0.75rem !important;
   }
 
-  /* Статус-бар */
-  div[style*="justifyContent: 'space-between'"][style*="flexWrap: wrap"] {
-    flex-direction: column;
-    align-items: flex-start !important;
+  /* ── btn-main на малых экранах ── */
+  .btn-main {
+    padding: 12px 20px;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+  }
+
+  /* ── Табы — скролл вместо переноса ── */
+  .tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   АДАПТИВНОСТЬ — ОЧЕНЬ МАЛЕНЬКИЙ ТЕЛЕФОН (< 400px)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .game-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  nav {
+    padding: 0 0.875rem !important;
   }
 }
 
